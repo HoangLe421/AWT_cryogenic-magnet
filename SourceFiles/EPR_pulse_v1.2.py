@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class EPR_pulse:
-    def __init__(self,sampling_rate=2.4e9):
+    def __init__(self,sampling_rate=2.5e9):
         self.sampling_rate = sampling_rate  # Default sampling rate in Hz
 
     @staticmethod

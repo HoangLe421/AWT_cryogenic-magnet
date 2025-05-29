@@ -1,10 +1,16 @@
 import numpy as np
-np.arange(0, 10, 1)
+
+__version__ = '1.0.1'
+__docformat__ = 'reStructuredText'
+
+__all__ = ['EPR_pulse', ]
+
 class EPR_pulse(object):
     def __init__(self,sampling_rate=2.4e9,Vpp=500):
         self.sampling_rate = sampling_rate  # Default sampling rate in Hz
         self.Vmax = Vpp/2 # Default voltage peak-to-peak in mV
         self.Vpp = Vpp # Default voltage peak-to-peak in mV
+
     @staticmethod
     def _parse_phase(phase):
         """
@@ -169,8 +175,8 @@ class EPR_pulse(object):
 
         t_seq, y_seq = self.must_be_64_multiple(t_seq, y_seq)
         # Convert the y_seq to DAC output format
-        y_dac = self.DAC_output(y_seq)
-        return t_seq, y_dac
+        #y_dac = self.DAC_output(y_seq)
+        return t_seq, y_seq
     
     def dig_output(self, steps, tolerance=1e-12):
         """
@@ -181,5 +187,16 @@ class EPR_pulse(object):
         # Create a digital output: 0 if nearly zero, 1 otherwise.
         dig_y = np.where(np.abs(y_seq) < tolerance, 0, 1)
         return t_seq, dig_y
+
+    def marker (self, steps, tolerance=1e-12):
+        """
+        This method uses the pulse_sequence method to get (t, y) and then produces a digital
+        representation where y=0 for zero values and y=1 where the pulse is active (nonzero).
+        """
+        t_seq, y_seq = self.pulse_sequence(steps)
+        sampled_y = y_seq[::4]
+        # Create a digital output: 0 if nearly zero, 1 otherwise.
+        mrk = np.where(np.abs(sampled_y) < tolerance, 0, 1)
+        return mrk 
 
     

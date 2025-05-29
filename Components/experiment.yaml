@@ -1,0 +1,50 @@
+# experiment.yaml
+
+version: 1.0
+
+# Define your phase cycles. All lists must be the same length.
+phase_cycles:
+  ph0: [0, 90]
+  ph1: [0, 0,   0,   0]
+  ph2: [45,45,  45,  45]
+  ph3: [90,90,  90,  90]
+
+# Define your variable delays (in ns)
+list1: [10, 20, 30, 40]
+
+
+# Define each named segment in order
+segments:
+  - name: segment1
+    steps:
+      # A Square pulse: length=90ns, amplitude=100mV, phase cycles from ph0
+      - type: Gaussian
+        length: 10    # ns
+        amplitude: 1
+        phase: ph0
+
+
+  - name: segment2
+    steps:
+      # A dynamic delay: uses the list1 values
+      - type: delay
+        length: list1
+
+  - name: segment3
+    steps:
+      # You can mix them however you like
+      - type: Gaussian
+        length: 30
+        amplitude: 1
+        phase: ph2
+
+      - type: delay
+        length: 10
+
+      - type: Gaussian
+        length: 60
+        amplitude: 1
+        phase: ph3
+
+      - type: delay
+        length: 5

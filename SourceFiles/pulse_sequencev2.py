@@ -131,7 +131,7 @@ class EPR_pulse(object):
         y = amplitude *  np.exp(1j * phase_offset)
         return t, y
     
-    def must_be_64_multiple (self, t_seq, y_seq):
+    def must_be_64_multiple (self, t_seq, y_seq, y_det=None):
         dt = np.diff(t_seq)[0]
         # Calculate the number of additional points needed
         remainder = len(t_seq) % 64
@@ -143,13 +143,19 @@ class EPR_pulse(object):
         t_seq_extended = np.append(t_seq, t_seq[-1] + dt * np.arange(1, additional_points + 1))
         # Extend y_seq with zeros
         y_seq_extended = np.append(y_seq, np.zeros(additional_points, dtype=y_seq.dtype))
+        if y_det is not None:
+            # Extend y_det with zeros if provided
+            y_det_extended = np.append(y_det, np.zeros(additional_points, dtype=y_det.dtype))
+            return t_seq_extended, y_seq_extended, y_det_extended
         # Update t_seq and y_seq
         t_seq = t_seq_extended
         y_seq = y_seq_extended
         return t_seq, y_seq
     
     def DAC_output(self, y_seq):
-        y_dac = (y_seq/self.Vpp +1/2)* (2**16-1)
+        y_dac = (y_seq/self.Vmax +1)* (2**16-1)/2
+        y_dac = np.round (y_dac)
+        y_dac = np.clip(y_dac,100,2**16-1 )
         return y_dac.astype(np.uint16)
     
     def pulse_sequence(self, steps):
@@ -224,20 +230,9 @@ class EPR_pulse(object):
             y_det = np.concatenate((y_det, y_local_ch2))
             current_time += duration
 
-        t_seq, y_seq = self.must_be_64_multiple(t_seq, y_seq)
-        # Convert the y_seq to DAC output format
-        #y_dac = self.DAC_output(y_seq)
+        t_seq, y_seq, y_det = self.must_be_64_multiple(t_seq, y_seq, y_det)  
         return t_seq, y_seq, y_det
     
-    def dig_output(self, steps, tolerance=1e-12):
-        """
-        This method uses the pulse_sequence method to get (t, y) and then produces a digital
-        representation where y=0 for zero values and y=1 where the pulse is active (nonzero).
-        """
-        t_seq, y_seq, y_det = self.pulse_sequence(steps)
-        # Create a digital output: 0 if nearly zero, 1 otherwise.
-        dig_y = np.where(np.abs(y_seq) < tolerance, 0, 1)
-        return t_seq, dig_y
 
     def marker (self, steps, tolerance=1e-12):
         """

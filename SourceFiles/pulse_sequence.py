@@ -113,7 +113,10 @@ class EPR_pulse(object):
         return t_seq, y_seq
     
     def DAC_output(self, y_seq):
-        y_dac = (y_seq/self.Vpp +1/2)* (2**16-1)
+        y_dac = (y_seq/self.Vmax +1)* (2**16-1)/2
+        y_dac = np.round (y_dac)
+        y_dac = np.clip(y_dac,100,2**16-1 )
+        print (self.Vpp)
         return y_dac.astype(np.uint16)
     
     def pulse_sequence(self, steps):
